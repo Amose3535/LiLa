@@ -5,8 +5,9 @@ const EPSILON = 0.00001
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	if OS.has_feature("debug"):
-		print("Calling core.test_matrix_class()")
-		core.test_matrix_class()
+		#core.test_matrix_class()
+		print(Matrix.new("4*4|3.14159").determinant())
+		print("")
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

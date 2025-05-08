@@ -1,7 +1,5 @@
-## Matrix
-## A class used to do operations with matrices
-##
-##
+## A class used to do implement matrices and their most important operations
+## @tutorial(Matrix example): https://www.solarius.solar
 class_name Matrix
 extends Object
 
@@ -9,13 +7,17 @@ extends Object
 
 # Cannot nest Array types BUT Matrices default automatically to float. THEY CANNOT
 # have anything else
-var elements : Array[Array] = []
+## Elements is a grid-like structure containing the raw data of the matrix
+var elements : Array[Array] = [[0.0]]
+## Rows automatically update through the getter function and matches the number of rows in elements
 var rows: int: get = get_rows
+## Columns automatically update through the getter function and matches the number of columns in elements
 var columns: int: get = get_columns
 
 func get_rows() -> int: return elements.size()
 func get_columns() -> int: return elements[0].size() if elements.size() > 0 else 0
 #endregion
+
 
 ## the function called when the matrix is built through Matrix.new(...). 
 # NOTE: when _init() is called there is an instance of this class => no need to instantiate a matrix, we can just edit the instanced one
@@ -70,6 +72,7 @@ func _init(from : Variant = null) -> void:
 	
 	else:
 		push_error("Matrix init error: Unsupported type for initialization.")
+
 
 #region CHECKS
 ## function to check if the instance of Matrix is valid
@@ -130,6 +133,42 @@ func is_diagonal() -> bool:
 	return true
 
 
+## Returns true if all values BELOW the diagonal are zero.
+func is_upper_triangular() -> bool:
+	if !is_valid():
+		push_error("is_upper_triangular(): Matrix must be valid!")
+		return false
+	
+	if !is_square():
+		push_error("is_upper_triangular(): Matrix must be square!")
+		return false
+	
+	for r in range(rows):
+		for c in range(columns):
+			if r > c and abs(elements[r][c]) > core.EPSILON:
+				return false
+	
+	return true
+
+
+## Returns true if all values BELOW the diagonal are zero.
+func is_lower_triangular() -> bool:
+	if !is_valid():
+		push_error("is_lower_triangular(): Matrix must be valid!")
+		return false
+	
+	if !is_square():
+		push_error("is_lower_triangular(): Matrix must be square!")
+		return false
+	
+	for r in range(rows):
+		for c in range(columns):
+			if r < c and abs(elements[r][c]) > core.EPSILON:
+				return false
+	
+	return true
+
+
 ## Checls if all elements of the matrix are equal to zero (uses EPSILON check)
 func is_zero() -> bool:
 	if !is_valid():
@@ -173,7 +212,7 @@ func is_identity() -> bool:
 		push_error("is_identity(): Matrix must be square to be identity.")
 		return false
 	
-	return self.equals(identity(rows)) # equates to true or false depending if matrix self equals the generated id matrix
+	return self.equals(Matrix.identity(rows)) # equates to true or false depending if matrix self equals the generated id matrix
 
 
 ## function to check if a provided array is suitable for matrix generation (Accessible from everywhere through Matrix.array_is_valid_matrix([...]) )
@@ -195,6 +234,7 @@ static func array_is_valid_matrix(array: Array) -> bool:
 	
 	return true
 #endregion
+
 
 #region COPY/GET
 ## function to clone another Matrix onto self
@@ -218,7 +258,6 @@ func get_row(index: int) -> Array:
 	return []
 
 
-
 ## function to get the column in an array based on the index
 func get_column(index: int) -> Array:
 	if index < 0 or index >= columns:
@@ -229,6 +268,25 @@ func get_column(index: int) -> Array:
 		col.append(row[index])
 	return col
 #endregion
+
+
+## Returns a string representation of this matrix.
+func mat_to_str() -> String:
+	if !is_valid():
+		push_error("mat_to_str(): Matrix is not valid.")
+		return ""
+	
+	return str(elements)
+
+
+## Returns an array containing the data of elements
+func mat_to_arr() -> Array:
+	if !is_valid():
+		push_error("mat_to_vec(): Matrix is not valid.")
+		return Array()
+	
+	return elements.duplicate(true)
+
 
 #region GENERATION/EDITING
 
@@ -288,13 +346,30 @@ func cofactor() -> Matrix:
 
 	for i in range(rows):
 		for j in range(columns):
-			var sign = (-1.0) ** (i + j)
+			var sign_value = (-1.0) ** (i + j)
 			var minor = minor_matrix(i, j)
-			cof.elements[i][j] = sign * minor.determinant()
+			cof.elements[i][j] = sign_value * minor.determinant()
 
 	return cof
 
+
+## Returns a copy of this matrix where each element is multiplied by its checkerboard sign.
+## Sign is calculated as (-1)^(row + column)
+func checker() -> Matrix:
+	if !is_valid():
+		push_error("checker(): Matrix is not valid.")
+		return self
+	
+	var result = Matrix.generate_matrix(rows, columns, 0.0)
+	
+	for r in range(rows):
+		for c in range(columns):
+			var sign_value = (-1.0) ** (r + c)
+			result.elements[r][c] = sign_value * elements[r][c]
+	
+	return result
 #endregion
+
 
 #region OPERATIONS
 
@@ -306,22 +381,10 @@ func multiply_by(k : float = 1) -> Matrix:
 				elements[row][cell] = elements[row][cell]*k
 	return self
 
+
 ## function used to execute dot multiplication between matrices
-# Well in this case i don't have much choice other than just producing a result matrix
-#
-# Use case: 
-# var A = Matrix.ones()
-# var B = Matrix.zeros()
-# var Res = A.dot(B)
-# 
-# dot mul works by getting the nth row of the first matrix and the nth row of 
-# the second matrix and outputting the sum of the products of each element of 
-# as the element of the matrix
-# ex:
-#	1 2
-#	4 5 dot  9 10 11 = 
-#	6 7     12 13 14
-#
+# dot mul works by getting the nth row of the first matrix and the nth row of the second matrix and outputting the sum of the 
+# products of each element as the element of the matrix
 func row_column_mult(operand : Matrix) -> Matrix:
 	var result = Matrix.new()
 	# If there is a mismatch between the rows of the first matrix and the columns of the second (basically the requirement to apply r/c mult)
@@ -343,6 +406,7 @@ func row_column_mult(operand : Matrix) -> Matrix:
 			result.elements[r][c] = sum
 	return result
 
+
 ## function to multiply element by element two matrices
 func hadamard_mult(operand : Matrix) -> Matrix:
 	if !self.is_valid() or !operand.is_valid():
@@ -358,6 +422,7 @@ func hadamard_mult(operand : Matrix) -> Matrix:
 			elements[r][c] *= operand.elements[r][c]
 	return self
 
+
 ## function used to pass from a nxm matrix to a mxn matrix with rotation of the elements
 func transpose() -> Matrix:
 	# Create a new matrix that's a copy of the instance
@@ -371,6 +436,7 @@ func transpose() -> Matrix:
 		self.elements[i] = col
 	
 	return self
+
 
 ## function used to add two matrices together
 func add(matrix : Matrix) -> Matrix:
@@ -387,6 +453,7 @@ func add(matrix : Matrix) -> Matrix:
 			elements[r][c] += matrix.elements[r][c]
 	return self
 
+
 ## function used to subtract two matrices together (same as add but simply with a - operator)
 func subtract(matrix : Matrix) -> Matrix:
 	if !self.is_valid() or !matrix.is_valid():
@@ -402,6 +469,7 @@ func subtract(matrix : Matrix) -> Matrix:
 			elements[r][c] -= matrix.elements[r][c]
 	return self
 
+
 ## function to multiply every element of the matrix by -1
 func negate() -> Matrix:
 	if !is_valid():
@@ -413,6 +481,7 @@ func negate() -> Matrix:
 			elements[r][c] *= -1
 	
 	return self
+
 
 ## computes the sum of all elements on the diagonal of square matrices
 func trace() -> float:
@@ -429,6 +498,7 @@ func trace() -> float:
 		sum += elements[i][i]
 	
 	return sum
+
 
 ## Returns a new matrix with the specified row removed.
 func delete_row(index: int) -> Matrix:
@@ -447,6 +517,7 @@ func delete_row(index: int) -> Matrix:
 		new_elements.append(elements[r].duplicate(true))
 	
 	return Matrix.new(new_elements)
+
 
 ## Returns a new matrix with the specified column removed.
 func delete_column(index: int) -> Matrix:
@@ -469,9 +540,11 @@ func delete_column(index: int) -> Matrix:
 	
 	return Matrix.new(new_elements)
 
+
 ## Returns the minor matrix by deleting the specified row and column.
 func minor_matrix(row_index: int, col_index: int) -> Matrix:
 	return delete_row(row_index).delete_column(col_index)
+
 
 ## Calculates the determinant of the matrix using recursive Laplace expansion.
 func determinant() -> float:
@@ -494,28 +567,11 @@ func determinant() -> float:
 	# Recursive case: expand along first row
 	var det = 0.0
 	for col in range(columns):
-		var sign = (-1.0) ** col
+		var sign_value = (-1.0) ** col
 		var sub = minor_matrix(0, col)
-		det += sign * elements[0][col] * sub.determinant()
+		det += sign_value * elements[0][col] * sub.determinant()
 	
 	return det
-
-
-## Returns a copy of this matrix where each element is multiplied by its checkerboard sign.
-## Sign is calculated as (-1)^(row + column)
-func checker() -> Matrix:
-	if !is_valid():
-		push_error("checker(): Matrix is not valid.")
-		return self
-	
-	var result = Matrix.generate_matrix(rows, columns, 0.0)
-	
-	for r in range(rows):
-		for c in range(columns):
-			var sign = (-1.0) ** (r + c)
-			result.elements[r][c] = sign * elements[r][c]
-	
-	return result
 
 
 ## Calculates and returns the inverse of this matrix (if invertible).
@@ -541,7 +597,26 @@ func inverse() -> Matrix:
 	return inverse_mat
 
 
+## Applies a function to each element of the matrix and returns a new Matrix.
+## The function must accept a float and return a float.
+func map(func_ref: Callable) -> Matrix:
+	if !is_valid():
+		push_error("map(): Matrix is not valid.")
+		return self
+	
+	if !func_ref.is_valid():
+		push_error("map(): Function is not valid.")
+		return self
+	
+	for r in range(rows):
+		for c in range(columns):
+			elements[r][c] = func_ref.call(elements[r][c])
+	
+	return self
+
+
 #endregion
+
 
 #region UTILS
 ## function to print the rows of an instance of Matrix
