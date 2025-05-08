@@ -267,7 +267,7 @@ func get_column(index: int) -> Array:
 	for row in elements:
 		col.append(row[index])
 	return col
-#endregion
+
 
 
 ## Returns a string representation of this matrix.
@@ -286,6 +286,9 @@ func mat_to_arr() -> Array:
 		return Array()
 	
 	return elements.duplicate(true)
+
+
+#endregion
 
 
 #region GENERATION/EDITING

@@ -6,7 +6,7 @@ const EPSILON = 0.00001
 func _ready():
 	if OS.has_feature("debug"):
 		#core.test_matrix_class()
-		print(Matrix.new("4*4|3.14159").determinant())
+		print(Matrix.new("4*4|%s"%PI).determinant())
 		print("")
 
 
