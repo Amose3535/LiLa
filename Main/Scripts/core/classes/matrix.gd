@@ -1,5 +1,4 @@
 ## A class used to do implement matrices and their most important operations
-## @tutorial(Matrix example): https://www.solarius.solar
 class_name Matrix
 extends Object
 
@@ -7,10 +6,13 @@ extends Object
 
 # Cannot nest Array types BUT Matrices default automatically to float. THEY CANNOT
 # have anything else
+
 ## Elements is a grid-like structure containing the raw data of the matrix
 var elements : Array[Array] = [[0.0]]
+
 ## Rows automatically update through the getter function and matches the number of rows in elements
 var rows: int: get = get_rows
+
 ## Columns automatically update through the getter function and matches the number of columns in elements
 var columns: int: get = get_columns
 
@@ -334,6 +336,24 @@ static func zeros(rows_num: int, columns_num: int) -> Matrix:
 	return z_mat
 
 
+## Generates a matrix filled with random values within a given interval [min, max].
+static func random(rows_num: int, columns_num: int, interval: Array = [-1.0, 1.0]) -> Matrix:
+	if interval.size() != 2:
+		push_error("random(): interval must be an Array of two floats: [min, max].")
+		return Matrix.zeros(rows_num, columns_num)
+	
+	var min_val = interval[0]
+	var max_val = interval[1]
+	var random_mat: Matrix = Matrix.zeros(rows_num, columns_num)
+	
+	for r in range(rows_num):
+		for c in range(columns_num):
+			random_mat.elements[r][c] = randf_range(min_val, max_val)
+	
+	return random_mat
+
+
+
 ## Calculates and returns the cofactor matrix of this matrix.
 ## Each element is: (-1)^(i+j) * determinant(minor(i,j))
 func cofactor() -> Matrix:
@@ -598,6 +618,142 @@ func inverse() -> Matrix:
 	var inverse_mat = adjugate.multiply_by(1.0 / det)
 
 	return inverse_mat
+
+
+## Swaps two rows of the matrix.
+func swap_rows(r1: int, r2: int) -> Matrix:
+	if !is_valid():
+		push_error("swap_rows(): Matrix is not valid.")
+		return self
+	
+	if r1 < 0 or r1 >= rows or r2 < 0 or r2 >= rows:
+		push_error("swap_rows(): Row indices out of bounds.")
+		return self
+	
+	var temp = elements[r1]
+	elements[r1] = elements[r2]
+	elements[r2] = temp
+	
+	return self
+
+
+## Multiplies all elements in a row by a non-zero factor.
+func scale_row(r: int, factor: float) -> Matrix:
+	if !is_valid():
+		push_error("scale_row(): Matrix is not valid.")
+		return self
+
+	if r < 0 or r >= rows:
+		push_error("scale_row(): Row index out of bounds.")
+		return self
+	
+	if abs(factor) < core.EPSILON:
+		push_error("scale_row(): Cannot scale by zero.")
+		return self
+
+	for c in range(columns):
+		elements[r][c] *= factor
+
+	return self
+
+
+## Adds a scaled version of 'source' row to 'target' row.
+## That is: target = target + source * factor
+func add_rows(target: int, source: int, factor: float) -> Matrix:
+	if !is_valid():
+		push_error("add_rows(): Matrix is not valid.")
+		return self
+	
+	if target < 0 or target >= rows or source < 0 or source >= rows:
+		push_error("add_rows(): Row indices out of bounds.")
+		return self
+	
+	for c in range(columns):
+		elements[target][c] += elements[source][c] * factor
+	
+	return self
+
+
+## Replaces all near-zero float values with 0.0 using core.EPSILON.
+func clean_near_zero() -> Matrix:
+	if !is_valid():
+		push_error("clean_near_zero(): Matrix is not valid.")
+		return self
+	
+	for r in range(rows):
+		for c in range(columns):
+			if abs(elements[r][c]) < core.EPSILON:
+				elements[r][c] = 0.0
+	
+	return self
+
+
+## Reduces the matrix to row echelon form using Gaussian elimination.
+## This function modifies self and returns self for chaining.
+func gauss_reduce() -> Matrix:
+	if !is_valid():
+		push_error("gauss_reduce(): Matrix is not valid.")
+		return self
+	
+	var lead = 0  # column we're reducing
+	for r in range(rows):
+		if lead >= columns:
+			break
+		
+		var i = r
+		while abs(elements[i][lead]) < core.EPSILON: # abs(smth) will always be > 0 so if abs(...) is between 0 and EPSILON it's treated as zero
+			i += 1
+			if i == rows:
+				i = r
+				lead += 1
+				if lead == columns:
+					return self
+		swap_rows(i, r)
+		
+		var pivot = elements[r][lead]
+		if abs(pivot) > core.EPSILON:
+			scale_row(r, 1.0 / pivot)
+	
+		for j in range(rows):
+			if j != r:
+				var factor = -elements[j][lead]
+				add_rows(j, r, factor)
+	
+		lead += 1
+	
+	return self
+
+
+## Solves the linear system Ax = B using Gaussian elimination.
+## Returns the solution matrix X if solvable.
+func solve(B: Matrix) -> Matrix:
+	if !is_valid() or !B.is_valid():
+		push_error("solve(): One of the matrices is invalid.")
+		return self
+	
+	if rows != B.rows:
+		push_error("solve(): Incompatible dimensions: A.rows must equal B.rows.")
+		return self
+	
+	# Create augmented matrix [A | B]
+	var augmented = Matrix.generate_matrix(rows, columns + B.columns, 0.0)
+	for r in range(rows):
+		for c in range(columns):
+			augmented.elements[r][c] = elements[r][c]
+		for bc in range(B.columns):
+			augmented.elements[r][columns + bc] = B.elements[r][bc]
+	
+	# Perform Gaussian elimination on augmented matrix
+	augmented.gauss_reduce().clean_near_zero()
+	
+	# Extract solution columns (everything after columns of A)
+	var result = Matrix.generate_matrix(columns, B.columns, 0.0)
+	for r in range(columns):
+		for bc in range(B.columns):
+			result.elements[r][bc] = augmented.elements[r][columns + bc]
+	
+	return result
+
 
 
 ## Applies a function to each element of the matrix and returns a new Matrix.

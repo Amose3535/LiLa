@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 core="*res://Main/Scripts/core/core.gd"
 
+[dotnet]
+
+project/assembly_name="LinearLab"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

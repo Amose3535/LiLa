@@ -6,8 +6,7 @@ const EPSILON = 0.00001
 func _ready():
 	if OS.has_feature("debug"):
 		#core.test_matrix_class()
-		print(Matrix.new("4*4|%s"%PI).determinant())
-		print("")
+		core.test_dense_layer_training()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -77,4 +76,35 @@ func test_matrix_class() -> void:
 	Matrix.printm(garbage)
 	
 	print("----- TEST ENDED -----")
+
+func test_dense_layer_training():
+	# === SETUP ===
+	print("\n=== INIT ===")
+	var layer = DenseLayer.new([2, 1])  # 2 input → 1 output
+	var input = Matrix.new([[1.0], [0.0]])  # colonna da 2 righe
+	var target = Matrix.new([[1.0]])  # voglio che produca 1
+
+	# === PRIMA DEL TRAINING ===
+	print("\n=== BEFORE TRAINING ===")
+	var output_before = layer.forward(input)
+	print("Output prima: ")
+	Matrix.printm(output_before)
+
+	# === ALLENAMENTO ===
+	for i in range(1000):
+		
+		layer.train(input, target, 0.1)
+
+	# === DOPO IL TRAINING ===
+	print("\n=== AFTER TRAINING ===")
+	var output_after = layer.forward(input)
+	print("Output dopo: ")
+	Matrix.printm(output_after)
+
+	# Stampa finale
+	print("\nPesi:\n")
+	Matrix.printm(layer.weights)
+	print("Bias:\n")
+	Matrix.printm(layer.bias)
+
 #endregion
