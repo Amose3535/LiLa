@@ -1,19 +1,49 @@
 extends Node
 
 const EPSILON = 0.00001
+const xor_nn_path : String = "user://XOR_neural_network.json"
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	if OS.has_feature("debug"):
 		#core.test_matrix_class()
-		#core.test_dense_layer_training()
-		core.test_neural_network_xor(6,0.2,8000)
+		#core.test_dense_layer_training_test()
+		#core.test_neural_network_xor(6,0.25,100000)
+		return
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-@warning_ignore("unused_parameter")
-func _process(delta):
-	pass
+## Saves a dictionary as JSON file to 'path'
+func save_dict(dict: Dictionary, path: String) -> bool:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify(dict, "", false, true))
+		file.close()
+		return true
+	else:
+		push_error("Impossibile aprire il file per la scrittura: " + path)
+		return false
+
+
+## Loads dictionary from JSON file
+func load_dict(path: String) -> Dictionary:
+	if !FileAccess.file_exists(path):
+		push_error("Il file non esiste: " + path)
+		return {}
+	
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Impossibile aprire il file per la lettura: " + path)
+		return {}
+	
+	var content := file.get_as_text()
+	file.close()
+	
+	var parsed = JSON.parse_string(content)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("Contenuto JSON non valido in: " + path)
+		return {}
+	
+	return parsed
 
 
 #region TESTING functions
@@ -78,7 +108,7 @@ func test_matrix_class() -> void:
 	
 	print("----- TEST ENDED -----")
 
-func test_dense_layer_training():
+func test_dense_layer_training_test():
 	# === SETUP ===
 	print("\n=== INIT ===")
 	var layer = DenseLayer.new([2, 1])  # 2 input → 1 output
@@ -126,79 +156,46 @@ func test_dense_layer_training():
 	Matrix.printm(layer.bias)
 
 func test_neural_network_xor(layer_neuron_number : int = 5, learning_rate : float = 0.1, training_cycles: int = 5000):
-	## input
-	print("\n=== XOR TEST START ===")
-
-	# Crea la rete neurale
-	var net = NeuralNetwork.new()
-	# the first "2" is the size of the inputs (for example [[0.0], [1.0]] is of size 2)
-	net.add_layer(DenseLayer.new([2, layer_neuron_number, [-2, 2]]))  # Hidden layer w/ layer_neuron_number neurons + random weight init interval -> [-2; 2]
-	net.add_layer(DenseLayer.new([layer_neuron_number, 1]))  # Output layer con 1 neurone 
-
-	# XOR dataset esteso (20 esempi con valori binari e frazionari)
+	print("\n=== NEURAL NETWORK TEST STARTED ===")
+	
+	# Crea la rete neurale con 1 hidden layer e 1 output layer. Il primo prende 2 input e "layer neuron number"
+	# output e l'output layer che prende "layer neuron number" input e sputa 1 solo output
+	var net = NeuralNetwork.new([[2,layer_neuron_number,[-1.0,1.0]],[layer_neuron_number,1]])
+	
+	# XOR dataset
 	var dataset : Dictionary = {
 		Matrix.new([[0.0], [0.0]]) : Matrix.new([[0.0]]),
 		Matrix.new([[0.0], [1.0]]) : Matrix.new([[1.0]]),
 		Matrix.new([[1.0], [0.0]]) : Matrix.new([[1.0]]),
-		Matrix.new([[1.0], [1.0]]) : Matrix.new([[0.0]]),
-		Matrix.new([[0.5], [0.5]]) : Matrix.new([[0.0]]),  # [0.5, 0.5] ~ uguali
-		Matrix.new([[0.0], [0.5]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.5], [0.0]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.2], [0.8]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.8], [0.2]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.3], [0.3]]) : Matrix.new([[0.0]]),
-		Matrix.new([[0.7], [0.7]]) : Matrix.new([[0.0]]),
-		Matrix.new([[0.1], [0.9]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.9], [0.1]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.4], [0.6]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.6], [0.4]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.25], [0.75]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.75], [0.25]]) : Matrix.new([[1.0]]),
-		Matrix.new([[0.9], [0.9]]) : Matrix.new([[0.0]]),
-		Matrix.new([[0.1], [0.1]]) : Matrix.new([[0.0]]),
-		Matrix.new([[0.05], [0.95]]) : Matrix.new([[1.0]])
+		Matrix.new([[1.0], [1.0]]) : Matrix.new([[0.0]])
 	}
 	
 	var inputs = dataset.keys()
 	
 	var targets = dataset.values()
 	
-	
-	var FLAG_EPSILON_REACHED : bool = false
 	# Allenamento
 	for epoch in range(training_cycles+1):
 		for i in range(inputs.size()):
-			if !FLAG_EPSILON_REACHED:
-				net.train(inputs[i], targets[i], learning_rate)
-		
-		if !FLAG_EPSILON_REACHED:
-			if epoch % 500 == 0:
-				var loss : float = net.compute_loss(inputs, targets)
-				if loss<=EPSILON:
-					FLAG_EPSILON_REACHED=true
-				print("Epoch %d, Loss=%s" %[epoch,loss])
-				for i in range(inputs.size()):
-					var out = net.forward(inputs[i])
-					print("Input: ", inputs[i].mat_to_str(), "→ Output: ", out.mat_to_str())
-			elif epoch == training_cycles:
-				print("Epoch %d" % epoch)
-				for i in range(inputs.size()):
-					var out = net.forward(inputs[i])
-					print("Input: ", inputs[i].mat_to_str(), "→ Output: ", out.mat_to_str())
-			
+			net.train(inputs[i], targets[i], learning_rate)
+	
+		if epoch % 500 == 0:
+			print("Epoch %d" % epoch)
+			for i in range(inputs.size()):
+				var out = net.forward(inputs[i])
+				print("Input: ", inputs[i].mat_to_str(), "→ Output: ", out.mat_to_str())
 	
 	# Risultato finale
-	print("\n=== XOR TEST END ===")
+	print("\n=== NEURAL NETWORK TEST ENDED ===")
 	for i in range(inputs.size()):
 		var output = net.forward(inputs[i])
 		print("Input: ", inputs[i].mat_to_str(), "→ Output: ", output.mat_to_str())
 	
-	
-	
-	print("=== PREDICTION TEST ===")
-	var input = Matrix.random(2,1,[0.0,1.0])
-	Matrix.printm(input)
-	print("|")
-	Matrix.printm(net.forward(input))
+	print("Attempting to save XOR NeuralNetwork to file...")
+	if save_dict(net.to_dict(),xor_nn_path):
+		print("Successfully saved XOR neural network to: %s"%[xor_nn_path])
+	else:
+		print("Unable to save XOR neural network to: %s"%[xor_nn_path])
+
 
 #endregion

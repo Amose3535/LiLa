@@ -290,6 +290,26 @@ func mat_to_arr() -> Array:
 	return elements.duplicate(true)
 
 
+## Returns a dictionary that is made up of the elements of the matrix. Useful for save serialization
+func to_dict() -> Dictionary:
+	if !is_valid():
+		push_error("to_dict(): Unable to make dict from invalid Matrix")
+		return {}
+	
+	return {
+		"elements": self.elements
+	}
+
+
+## Returns a Matrix class from a dictionary. Useful for save deserialization
+static func from_dict(dict: Dictionary) -> Matrix:
+	if not dict.has("elements"):
+		push_error("Matrix.from_dict(): Missing 'elements' key.")
+		return Matrix.new()
+	
+	return Matrix.new(dict["elements"])
+
+
 #endregion
 
 
@@ -772,7 +792,6 @@ func map(func_ref: Callable) -> Matrix:
 			elements[r][c] = func_ref.call(elements[r][c])
 	
 	return self
-
 
 #endregion
 

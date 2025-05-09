@@ -1,0 +1,142 @@
+[gd_scene load_steps=2 format=3 uid="uid://6keu13mx4n3k"]
+
+[ext_resource type="Script" path="res://Main/Scripts/ML_Demo.gd" id="1_fj0xt"]
+
+[node name="MlDemo" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fj0xt")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Control" type="Control" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -67.0
+offset_right = 67.0
+offset_bottom = 46.0
+grow_horizontal = 2
+text = "Start"
+
+[node name="BackButton" type="Button" parent="MarginContainer/Control"]
+layout_mode = 1
+offset_right = 47.0
+offset_bottom = 47.0
+text = "<"
+
+[node name="FileControls" type="Control" parent="MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -384.0
+offset_bottom = 54.0
+grow_horizontal = 0
+
+[node name="FileEdit" type="TextEdit" parent="MarginContainer/Control/FileControls"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "user://XOR_neural_network.json"
+placeholder_text = "Neural Network path"
+
+[node name="FileButton" type="Button" parent="MarginContainer/Control/FileControls"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -55.0
+offset_top = -27.0
+offset_right = -1.0
+offset_bottom = 27.0
+grow_vertical = 2
+text = "📂"
+
+[node name="FileDialog" type="FileDialog" parent="MarginContainer/Control/FileControls"]
+title = "Open a File"
+ok_button_text = "Apri"
+file_mode = 0
+access = 1
+filters = PackedStringArray("*.json", "*.txt", "*.csv", "*.*")
+show_hidden_files = true
+use_native_dialog = true
+
+[node name="Body" type="PanelContainer" parent="MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 64.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer/Control/Body"]
+layout_mode = 2
+split_offset = 525
+
+[node name="Inputs" type="Panel" parent="MarginContainer/Control/Body/HSplitContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Control/Body/HSplitContainer/Inputs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 42.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/Control/Body/HSplitContainer/Inputs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -532.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "[center]Inputs[/center]"
+
+[node name="Outputs" type="Panel" parent="MarginContainer/Control/Body/HSplitContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Control/Body/HSplitContainer/Outputs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 42.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/Control/Body/HSplitContainer/Outputs"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -532.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "[center]Outputs[/center]"
+
+[connection signal="pressed" from="MarginContainer/Control/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="text_changed" from="MarginContainer/Control/FileControls/FileEdit" to="." method="_on_file_edit_text_changed"]
+[connection signal="pressed" from="MarginContainer/Control/FileControls/FileButton" to="." method="_on_file_button_pressed"]
+[connection signal="file_selected" from="MarginContainer/Control/FileControls/FileDialog" to="." method="_on_file_dialog_file_selected"]

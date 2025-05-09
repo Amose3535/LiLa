@@ -16,6 +16,8 @@ func get_output_size() -> int:
 	return weights.rows if weights.is_valid() else 0
 #endregion
 
+#region INIT
+
 func _init(from: Variant = null) -> void:
 	if from == null:
 		weights = Matrix.generate_matrix(1, 1, 0.0)
@@ -53,7 +55,10 @@ func _init(from: Variant = null) -> void:
 		return 
 	
 	push_error("DenseLayer init error: Unsupported init format.")
+#endregion
 
+
+#region OPERATIONS
 
 ## Performs the forward pass of the layer
 func forward(input: Matrix) -> Matrix:
@@ -96,3 +101,29 @@ func train(input: Matrix, target: Matrix, learning_rate: float = 0.1) -> void:
 	# --- UPDATE weights and bias ---
 	weights.add(delta_weights)
 	bias.add(delta_bias)
+
+
+## Returns a Dictionary from the current DenseLayer
+func to_dict() -> Dictionary:
+	if !weights.is_valid() or !bias.is_valid():
+		push_error("to_dict(): Weights and/or Bias matrices are invalid.")
+		return {}
+	
+	return {
+		"weights": weights.to_dict(),
+		"bias": bias.to_dict()
+	}
+
+
+## Returns a Dense Layer from a provided Dictionary
+static func from_dict(data: Dictionary) -> DenseLayer:
+	if not data.has("weights") or not data.has("bias"):
+		push_error("DenseLayer.from_dict(): Missing keys.")
+		return DenseLayer.new()
+	
+	var layer = DenseLayer.new()
+	layer.weights = Matrix.from_dict(data["weights"])
+	layer.bias = Matrix.from_dict(data["bias"])
+	return layer
+
+#endregion
