@@ -1,6 +1,6 @@
 ## A class used to do implement matrices and their most important operations
 class_name Matrix
-extends Object
+extends RefCounted # RefCounted>Object cause with huge amounts of matrices they auto-clean themselves when not used anymore
 
 #region Internal variables
 
@@ -782,4 +782,12 @@ func map(func_ref: Callable) -> Matrix:
 static func printm(matrix : Matrix) -> void:
 	for i in range(matrix.rows):
 		print(matrix.elements[i])
+
+
+## helps debug errors with matrices
+static func debug_shape(matrix: Matrix, label: String = "") -> void:
+	var prefix = label + ": " if label != "" else ""
+	print("%sMatrix %s | r*c: %s×%s | Valid: %s" % [
+		prefix, matrix, matrix.rows, matrix.columns, matrix.is_valid()
+	])
 #endregion

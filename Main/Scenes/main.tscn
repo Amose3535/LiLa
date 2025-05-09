@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://bkwlofpfagois"]
+[gd_scene load_steps=4 format=3 uid="uid://bkwlofpfagois"]
 
 [ext_resource type="Script" path="res://Main/Scripts/main.gd" id="1_b2syt"]
+
+[sub_resource type="Curve" id="Curve_005gm"]
+_data = [Vector2(0, 1), 0.0, 0.570175, 0, 0, Vector2(1, 0), 0.897436, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_butyc"]
+curve = SubResource("Curve_005gm")
 
 [node name="Main" type="PanelContainer"]
 anchors_preset = 15
@@ -14,6 +21,101 @@ script = ExtResource("1_b2syt")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
 
 [node name="Control" type="Control" parent="MarginContainer"]
 layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -124.0
+offset_right = 124.0
+offset_bottom = 61.0
+grow_horizontal = 2
+bbcode_enabled = true
+text = "[center][wave speed=100][font size=20]Linear algebra and Geometry Snippets[/font][/wave][/center]"
+scroll_active = false
+shortcut_keys_enabled = false
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 77.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Control/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Control" type="Control" parent="MarginContainer/Control/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 289
+theme_override_constants/v_separation = 274
+columns = 4
+
+[node name="Control" type="Control" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer"]
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer/Control"]
+layout_mode = 0
+offset_right = 264.0
+offset_bottom = 192.0
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer/Control/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="Control" type="Control" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer/Control/Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer/Control/Panel/MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -25.0
+grow_horizontal = 2
+grow_vertical = 0
+bbcode_enabled = true
+text = "[center][color=green]ML Demo[/color][/center]"
+scroll_active = false
+shortcut_keys_enabled = false
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/Control/PanelContainer/MarginContainer/Control/GridContainer/Control/Panel/MarginContainer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CurveTexture_butyc")

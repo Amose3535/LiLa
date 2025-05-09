@@ -40,20 +40,26 @@ func _init(from: Variant = null) -> void:
 	
 	# If from is an Array like [input_size : int, output_size : int]
 	if from is Array and from.size() == 2 and typeof(from[0]) == TYPE_INT and typeof(from[1]) == TYPE_INT:
-		var input_size = from[0]
-		var output_size = from[1]
-		weights = Matrix.random(output_size, input_size, [-1.0, 1.0])
-		bias = Matrix.generate_matrix(output_size, 1, 0.0)
+		var input_dim = from[0]
+		var output_dim = from[1]
+		weights = Matrix.random(output_dim, input_dim, [-1.0, 1.0])
+		bias = Matrix.generate_matrix(output_dim, 1, 0.0)
 		return
+	elif from is Array and from.size() == 3 and typeof(from[0]) == TYPE_INT and typeof(from[1]) == TYPE_INT and typeof(from[2]) == TYPE_ARRAY:
+		var input_dim = from[0]
+		var output_dim = from[1]
+		weights = Matrix.random(output_dim, input_dim, from[2])
+		bias = Matrix.generate_matrix(output_dim, 1, 0.0)
+		return 
 	
 	push_error("DenseLayer init error: Unsupported init format.")
 
 
 ## Performs the forward pass of the layer
 func forward(input: Matrix) -> Matrix:
-	print("weights: ", weights.rows, "x", weights.columns)
-	print("input: ", input.rows, "x", input.columns)
-	print("bias: ", bias.rows, "x", bias.columns)
+	#print("weights: ", weights.rows, "x", weights.columns)
+	#print("input: ", input.rows, "x", input.columns)
+	#print("bias: ", bias.rows, "x", bias.columns)
 	var z = weights.row_column_mult(input).add(bias)
 	return z.map(func(x): return 1.0 / (1.0 + exp(-x)))  # sigmoid
 
@@ -66,8 +72,13 @@ func train(input: Matrix, target: Matrix, learning_rate: float = 0.1) -> void:
 		return
 	
 	# --- FORWARD PASS ---
+	#Matrix.debug_shape(weights,"Weights")
+	#Matrix.debug_shape(input,"Input")
+	#Matrix.debug_shape(bias,"Bias")
 	var z = weights.row_column_mult(input).add(bias)
+	#Matrix.debug_shape(z,"Z")
 	var output = z.map(func(x): return 1.0 / (1.0 + exp(-x)))  # sigmoid(x)
+	#Matrix.debug_shape(output,"Output")
 	
 	# --- CALCULATE ERROR ---
 	var error = Matrix.new(target).subtract(output) # copy the target matrix onto a new one and subtract from ti theoutput. That's the error
@@ -79,7 +90,7 @@ func train(input: Matrix, target: Matrix, learning_rate: float = 0.1) -> void:
 	var delta = error.hadamard_mult(gradient)
 	
 	# --- gradient descent step ---
-	var delta_weights = delta.row_column_mult(input.transpose()).multiply_by(learning_rate)
+	var delta_weights = delta.row_column_mult(Matrix.new(input).transpose()).multiply_by(learning_rate)
 	var delta_bias = delta.multiply_by(learning_rate)
 	
 	# --- UPDATE weights and bias ---
